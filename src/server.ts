@@ -9,7 +9,7 @@ type ExtendedRequest = Request & XHubRequest;
 export function init() {
     const app = express();
     app.use(xhub({ algorithm: "sha1", secret: process.env.WHATSAPP_WEBHOOK_SECRET! }));
-    app.use(express.json);
+    app.use(express.json());
 
     app.get(WEBHOOK_PATH, (req, res) => {
         if (req.query["hub.mode"] !== "subscribe") {
@@ -46,7 +46,9 @@ export function init() {
         res.sendStatus(200);
     });
 
-    app.listen();
+    app.listen(3000, "localhost", () => {
+        console.log("Listening on localhost:3000");
+    });
 }
 
 const sendReply = async (fromPhoneNumberId: string, to: string, message: string) => {
