@@ -1,6 +1,7 @@
 import axios from "axios";
 import express, { Request } from "express";
 import xhub, { XHubRequest } from "express-x-hub";
+import { processWhatsAppWebhook } from "./whatsapp";
 
 const WEBHOOK_PATH = "/whatsapp-webhook";
 
@@ -30,39 +31,12 @@ export function init() {
             return;
         }
 
-        for (let entry of req.body.entry) {
-            for (let change of entry.changes) {
-                if (change.value && change.value.messages) {
-                    for (let message of change.value.messages) {
-                        if (message.type === 'text') {
-                            const reply = "Message received: " + message.text.body;
-                            await sendReply(change.value.metadata.phone_number_id, message.from, reply);
-                        }
-                    }
-                }
-            }
-        }
+        processWhatsAppWebhook(req);
 
         res.sendStatus(200);
     });
 
     app.listen(3000, () => {
         console.log("Listening on port 3000");
-    });
-}
-
-const sendReply = async (fromPhoneNumberId: string, to: string, message: string) => {
-    await axios.post(`https://graph.facebook.com/v16.0/${fromPhoneNumberId}/messages`, JSON.stringify({
-        messaging_product: "whatsapp",
-        to: to,
-        text: {
-            body: message,
-            preview_url: false,
-        }
-    }), {
-        headers: {
-            "Authorization": process.env.WHATSAPP_ACCESS_TOKEN,
-            "Content-Type": "application/json",
-        }
     });
 }
